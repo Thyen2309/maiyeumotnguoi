@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mưa Tim & Chữ Yêu (Bay Đến Đỉnh)</title>
+  <title>Mưa Tim & Chữ Yêu (Text Rõ & Thưa)</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body, html {
@@ -34,7 +34,7 @@
   </div>
 
   <script>
-    // — Setup 2 canvas cùng kích thước —
+    // --- Khởi tạo 2 canvas ---
     const cH = document.getElementById('hearts'), ctxH = cH.getContext('2d');
     const cT = document.getElementById('texts'),  ctxT = cT.getContext('2d');
     let W, H;
@@ -45,7 +45,7 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // —––––– Tim bay ––––––
+    // --- Tim bay giữ nguyên ---
     const hearts = [];
     function spawnHearts(cnt = 2) {
       for (let i = 0; i < cnt; i++) {
@@ -59,10 +59,7 @@
         });
       }
     }
-    // Spawn 2 tim mỗi 200ms
     setInterval(() => spawnHearts(2), 200);
-
-    // Vẽ shape heart tại (0,0)
     function drawHeart(ctx, s) {
       const r = s / 2;
       ctx.beginPath();
@@ -72,14 +69,11 @@
       ctx.closePath();
       ctx.fill();
     }
-
     function renderHearts() {
       ctxH.clearRect(0, 0, W, H);
-      hearts.forEach((h, i) => {
-        // Cập nhật vị trí
+      hearts.forEach((h,i) => {
         h.y -= h.speed;
         h.x += Math.sin(h.y * 0.02) * h.sway;
-        // Tính độ mờ dựa vào vị trí (dần mờ khi lên cao)
         const alpha = Math.max(0, Math.min(1, (H - h.y) / H));
         ctxH.save();
         ctxH.translate(h.x, h.y);
@@ -88,14 +82,13 @@
         ctxH.fillStyle = `hsla(${h.hue},80%,60%,${alpha})`;
         drawHeart(ctxH, h.size);
         ctxH.restore();
-        // Xoá khi bay quá đỉnh
-        if (h.y + h.size < 0) hearts.splice(i, 1);
+        if (h.y + h.size < 0) hearts.splice(i,1);
       });
       requestAnimationFrame(renderHearts);
     }
     renderHearts();
 
-    // —––––– Mưa chữ ––––––
+    // --- Mưa chữ: thưa & rõ nét ---
     const phrases = [
       "Anh yêu em",
       "Yêu em nhiều lắm",
@@ -110,42 +103,38 @@
           text: phrases[Math.floor(Math.random() * phrases.length)],
           x: Math.random() * W,
           y: H + 20,
-          size: 14 + Math.random() * 36,
-          speed: 0.3 + Math.random() * 0.5,
-          sway: Math.random() * 1.5 - 0.75
+          size: 20 + Math.random() * 20,   // font-size 20–40px
+          speed: 0.3 + Math.random() * 0.3, // hơi chậm
+          sway: Math.random() * 1 - 0.5
         });
       }
     }
-    // Spawn 1 chữ mỗi 300ms
-    setInterval(() => spawnTexts(1), 300);
+    // Giảm tần suất: 1 chữ mỗi 800ms
+    setInterval(() => spawnTexts(1), 800);
 
     function renderTexts() {
       ctxT.clearRect(0, 0, W, H);
       texts.forEach((t, i) => {
-        // Cập nhật vị trí
         t.y -= t.speed;
         t.x += Math.sin(t.y * 0.02) * t.sway;
-        // Tính alpha dựa vào vị trí
-        const alpha = Math.max(0, Math.min(1, (H - t.y) / H));
         ctxT.save();
-        ctxT.globalAlpha = alpha;
+        ctxT.globalAlpha = 1;  // luôn full opacity
         ctxT.font = `${t.size}px Arial`;
-        ctxT.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctxT.fillStyle = `#ffffff`;
         ctxT.fillText(t.text, t.x, t.y);
         ctxT.restore();
-        // Xoá khi bay quá đỉnh
-        if (t.y + t.size < 0) texts.splice(i, 1);
+        if (t.y + t.size < 0) texts.splice(i,1);
       });
       requestAnimationFrame(renderTexts);
     }
     renderTexts();
 
-    // —––––– Tương tác nghiêng & kéo ––––––
+    // --- Tương tác nghiêng & kéo ---
     const scene = document.getElementById('scene');
-    let orientX = 0, orientY = 0, dragX = 0, dragY = 0, sx = 0, sy = 0;
+    let orientX=0, orientY=0, dragX=0, dragY=0, sx, sy;
     window.addEventListener('deviceorientation', e => {
-      orientX = -(e.beta || 0) * 0.3;
-      orientY = (e.gamma || 0) * 0.3;
+      orientX = -(e.beta||0)*0.3;
+      orientY = (e.gamma||0)*0.3;
       updateScene();
     });
     scene.addEventListener('touchstart', e => {
@@ -167,24 +156,22 @@
          rotateY(${orientY + dragY}deg)`;
     }
 
-    // —––––– Lắc đẩy nhanh ––––––
-    let last = { x: null, y: null, z: null };
-    window.addEventListener('devicemotion', e => {
+    // --- Lắc để đẩy nhanh ---
+    let last={x:null,y:null,z:null};
+    window.addEventListener('devicemotion', e=>{
       const a = e.accelerationIncludingGravity;
-      if (last.x !== null) {
-        const d = Math.abs(a.x - last.x)
-                + Math.abs(a.y - last.y)
-                + Math.abs(a.z - last.z);
-        if (d > 18) {
-          hearts.forEach(h => h.speed *= 2);
-          texts.forEach(t => t.speed *= 2);
-          setTimeout(() => {
-            hearts.forEach(h => h.speed /= 2);
-            texts.forEach(t => t.speed /= 2);
-          }, 400);
+      if (last.x!==null){
+        const d = Math.abs(a.x-last.x)+Math.abs(a.y-last.y)+Math.abs(a.z-last.z);
+        if (d>18){
+          hearts.forEach(h=>h.speed*=2);
+          texts.forEach(t=>t.speed*=2);
+          setTimeout(()=>{
+            hearts.forEach(h=>h.speed/=2);
+            texts.forEach(t=>t.speed/=2);
+          },400);
         }
       }
-      last = { x: a.x, y: a.y, z: a.z };
+      last = { x:a.x, y:a.y, z:a.z };
     });
   </script>
 </body>
